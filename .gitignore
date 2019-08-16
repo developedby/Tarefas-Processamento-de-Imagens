@@ -1,0 +1,5 @@
+pacotes/
+*.pyc
+.vscode/
+__pycache__/
+*.bmp
