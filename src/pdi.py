@@ -8,7 +8,7 @@ def binarize(img, threshold):
 
 def labelize(img, min_width, min_height, min_n_px):
     """Rotula os componentes de uma imagem binária
-    
+
     :param img: Imagem binária que vai ser rotulada
     :param min_width: Largura mínima de cada componente
     :param min_height: Altura mínima de cada componente
@@ -31,16 +31,16 @@ def labelize(img, min_width, min_height, min_n_px):
     for component in components:
         y_min, x_min = img.shape
         y_max, x_max = 0, 0
-        n_pixels = 0
         for pixel in component:
-            n_pixels += 1
             y_min = min(y_min, pixel[0])
             y_max = max(y_max, pixel[0])
             x_min = min(x_min, pixel[1])
             x_max = max(x_max, pixel[1])
         width = x_max - x_min + 1
         height = y_max - y_min + 1
-        if width >= min_width and height >= min_height and n_pixels >= min_n_px:
+        if (width >= min_width
+                and height >= min_height
+                and len(component) >= min_n_px):
             valid_components.append(component)
     return valid_components
 
@@ -79,6 +79,7 @@ def invert(img):
     return 1 - img
 
 def draw_bounding_rectangle(img, component, thickness=2):
+    """Desenha na imagem os retângulos que contornam os componentes"""
     y_min, x_min, _ = img.shape
     y_max, x_max = 0, 0
     n_pixels = 0
