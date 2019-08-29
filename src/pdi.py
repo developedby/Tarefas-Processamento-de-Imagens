@@ -91,3 +91,23 @@ def draw_bounding_rectangle(img, component, thickness=2):
         x_max = max(x_max, pixel[1])
     cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), thickness)
     return img
+
+def mean_filter_bad(img, wndw):
+    """Aplica um filtro da média usando algoritmo ingênuo
+    :param img: Imagem de entrada
+    :param wndw: Tamanho da janela no formato (height, width)
+    :returns: A imagem borrada
+    """
+    out_shape = img.shape
+    out_shape[0] -= wndw[0]
+    out_shape[1] -= wndw[1]
+    out_img = np.ndarray(out_shape)
+    for ch in range(img.shape[2]):
+        for y in range(wndw[0]//2, img.shape[0] - wndw[0]//2 + 1):
+            for x in range(wndw[1]//2, img.shape[1] - wndw[1]//2 + 1):
+                sum = 0
+                for i in range(wndw[0]):
+                    for j in range(wndw[1]):
+                        sum += img[y-(wndw[0]//2)+i, x-(wndw[1]//2)+j, ch]
+                out_img[y, x, ch] = sum
+    out_img /= wndw[0] * wndw[1]
