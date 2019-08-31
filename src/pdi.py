@@ -111,3 +111,48 @@ def mean_filter_bad(img, wndw):
                         sum += img[y-(wndw[0]//2)+i, x-(wndw[1]//2)+j, ch]
                 out_img[y, x, ch] = sum
     out_img /= wndw[0] * wndw[1]
+    return out_img
+
+    def mean_filter_separable(img, wndw):
+        """Aplica um filtro da média usando algoritmo separável aproveitando soma
+        :param img: Imagem de entrada
+        :param wndw: Tamanho da janela no formato (height, width)
+        :returns: A imagem borrada
+        """
+        out_shape = img.shape
+        out_shape[0] -= wndw[0]
+        out_shape[1] -= wndw[1]
+        inter_img = np.ndarray(out_shape)
+        #horizontal
+        for ch in range(img.shape[2]):
+            for y in range(wndw[0]//2, img.shape[0] - wndw[0]//2 + 1):
+                all_win = True
+                for x in range(wndw[1]//2, img.shape[1] - wndw[1]//2 + 1):
+                    sum = 0
+                    if not all_win:
+                        sum = prev_sum + img[y+(wndw[0]//2)+1, x, ch] -
+                        img[y-(wndw[0]//2), x, ch]
+                    else:
+                        for i in range(wndw[0]):
+                            sum += img[y-(wndw[0]//2)+i, x, ch]
+                        all_win = False
+                    inter_img[y, x, ch] = sum
+                    prev_sum = sum
+        out_img = np.ndarray(out_shape)
+        #vertical
+        for ch in range(inter_img.shape[2]):
+            for x in range(wndw[1]//2, inter_img.shape[1] - wndw[1]//2 + 1):
+                all_win = True
+                for y in range(wndw[0]//2, inter_img.shape[0] - wndw[0]//2 + 1):
+                    sum = 0
+                    if not all_win:
+                        sum = prev_sum + inter_img[y, x + (wndw[1]//2)+1, ch] -
+                        inter_img[y, x-(wndw[1]//2), ch]
+                    else:
+                        for i in range(wndw[1]):
+                            sum += inter_img[y, x-(wndw[1]//2)+i, ch]
+                        all_win = False
+                    out_img[y, x, ch] = sum
+                    prev_sum = sum
+        out_img /= wndw[0] * wndw[1]
+        return out_img
