@@ -175,3 +175,57 @@ def integrated_image(img):
             for x in range(out_img.shape[1]):
                 out_img[y, x, ch] = out_img[y, x, ch] + out_img[y-1, x, ch]
     return out_img
+
+def mean_filter_integrated(img, wndw):
+    """Aplica um filtro da média usando uma imagem integrada
+    :param img: Imagem de entrada
+    :param wndw: Tamanho da janela no formato (height, width)
+    :returns: A imagem borrada
+    """
+    inter_img = integrated_image(img)
+    out_img = np.ndarray(inter_img.shape)
+    r_b = 0
+    r_t = 0
+    l_b = 0
+    l_t = 0
+    for ch in range(inter_img.shape[2]):
+        for y in range(inter_img.shape[0]):
+            for x in range(inter_img.shape[1]):
+                if (y+(wndw[0]//2)+1) >= inter_img.shape[0]:
+                    if (x+(wndw[1]//2)+1) >= inter_img.shape[1]:
+                        r_b = inter_img[inter_img.shape[0]-1, inter_img.shape[1]-1, ch]
+                    else:
+                        r_b = inter_img[inter_img.shape[0]-1, x+(wndw[1]//2)+1, ch]
+                    if (x-(wndw[1]//2)-1) < 0:
+                        l_b = inter_img[inter_img.shape[0]-1, 0, ch]
+                    else:
+                        l_b = inter_img[inter_img.shape[0]-1, x-(wndw[1]//2)-1, ch]
+                else:
+                    if (x+(wndw[1]//2)+1) >= inter_img.shape[1]:
+                        r_b = inter_img[y+(wndw[0]//2)+1, inter_img.shape[1]-1, ch]
+                    else:
+                        r_b = inter_img[y+(wndw[0]//2)+1, x+(wndw[1]//2)+1, ch]
+                    if (x-(wndw[1]//2)-1) < 0:
+                        l_b = inter_img[y+(wndw[0]//2)+1, 0, ch]
+                    else:
+                        l_b = inter_img[y+(wndw[0]//2)+1, x-(wndw[1]//2)-1, ch]
+                if (y-(wndw[0]//2)-1) < 0:
+                    if (x+(wndw[1]//2)+1) >= inter_img.shape[1]:
+                        r_t = inter_img[0, inter_img.shape[1]-1, ch]
+                    else:
+                        r_t = inter_img[0, x+(wndw[1]//2)+1, ch]
+                    if (x-(wndw[1]//2)-1) < 0:
+                        l_t = inter_img[0, 0, ch]
+                    else:
+                        l_t = inter_img[0, x-(wndw[1]//2)-1, ch]
+                else:
+                    if (x+(wndw[1]//2)+1) >= inter_img.shape[1]:
+                        r_t = inter_img[y-(wndw[0]//2)-1, inter_img.shape[1]-1, ch]
+                    else:
+                        r_t = inter_img[y-(wndw[0]//2)-1, x+(wndw[1]//2)+1, ch]
+                    if (x-(wndw[1]//2)-1) < 0:
+                        l_t = inter_img[y-(wndw[0]//2)-1, 0, ch]
+                    else:
+                        l_t = inter_img[y-(wndw[0]//2)-1, x-(wndw[1]//2)-1, ch]
+                out_inter_img[y, x, ch] = r_b + l_t - l_b - r_t
+    return out_img
