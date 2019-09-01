@@ -13,13 +13,13 @@ from pdi import *
 
 # Parâmetros
 IMAGE_FOLDER = "../img"
-INPUT_IMAGE = "arroz.bmp"
+INPUT_IMAGE = "flowers.bmp"
 WINDOW_HEIGHT = 3
 WINDOW_WIDTH = 3
 
 if __name__ == '__main__':
     # Abre a imagem
-    img = cv2.imread(f"{IMAGE_FOLDER}/{INPUT_IMAGE}", cv2.IMREAD_GRAYSCALE)
+    img = cv2.imread(f"{IMAGE_FOLDER}/{INPUT_IMAGE}", cv2.IMREAD_COLOR)
     if img is None:
         print("Erro ao abrir a imagem")
         exit()

@@ -98,18 +98,23 @@ def mean_filter_bad(img, wndw):
     :param wndw: Tamanho da janela no formato (height, width)
     :returns: A imagem borrada
     """
-    out_shape = img.shape
-    out_shape[0] -= wndw[0]
-    out_shape[1] -= wndw[1]
+    colored = True
+    if(len(img.shape) == 3):
+        out_shape = (img.shape[0] -  wndw[0] + 1, img.shape[1] - wndw[1] + 1, img.shape[2])
+    else:
+        colored = False
+        out_shape = (img.shape[0] -  wndw[0] + 1, img.shape[1] - wndw[1] + 1, 1)
     out_img = np.ndarray(out_shape)
-    for ch in range(img.shape[2]):
-        for y in range(wndw[0]//2, img.shape[0] - wndw[0]//2 + 1):
-            for x in range(wndw[1]//2, img.shape[1] - wndw[1]//2 + 1):
+    for ch in range(img.shape[2] if colored  else 1):
+        for y in range(wndw[0]//2, img.shape[0] - wndw[0]//2):
+            for x in range(wndw[1]//2, img.shape[1] - wndw[1]//2):
                 sum = 0
                 for i in range(wndw[0]):
                     for j in range(wndw[1]):
-                        sum += img[y-(wndw[0]//2)+i, x-(wndw[1]//2)+j, ch]
-                out_img[y, x, ch] = sum
+                        sum += (img[y-(wndw[0]//2)+i, x-(wndw[1]//2)+j, ch] if colored
+                        else img[y-(wndw[0]//2)+i, x-(wndw[1]//2)+j])
+                #print(x, y)
+                out_img[y-wndw[0]//2, x-wndw[1]//2, ch] = sum
     out_img /= wndw[0] * wndw[1]
     return out_img
 
@@ -119,40 +124,47 @@ def mean_filter_separable(img, wndw):
     :param wndw: Tamanho da janela no formato (height, width)
     :returns: A imagem borrada
     """
-    out_shape = img.shape
-    out_shape[0] -= wndw[0]
-    out_shape[1] -= wndw[1]
+    colored = True
+    if(len(img.shape) == 3):
+        out_shape = (img.shape[0] -  wndw[0] + 1, img.shape[1] - wndw[1] + 1, img.shape[2])
+    else:
+        colored = False
+        out_shape = (img.shape[0] -  wndw[0] + 1, img.shape[1] - wndw[1] + 1, 1)
     inter_img = np.ndarray(out_shape)
     #horizontal
-    for ch in range(img.shape[2]):
-        for y in range(wndw[0]//2, img.shape[0] - wndw[0]//2 + 1):
+    for ch in range(img.shape[2] if colored  else 1):
+        for y in range(wndw[0]//2, img.shape[0] - wndw[0]//2):
             all_win = True
-            for x in range(wndw[1]//2, img.shape[1] - wndw[1]//2 + 1):
+            for x in range(wndw[1]//2, img.shape[1] - wndw[1]//2):
                 sum = 0
                 if not all_win:
-                    sum = prev_sum + img[y+(wndw[0]//2)+1, x, ch] -
-                    img[y-(wndw[0]//2), x, ch]
+                    sum = prev_sum + (img[y+(wndw[0]//2), x, ch]
+                    - img[y-(wndw[0]//2), x, ch] if colored else
+                    img[y+(wndw[0]//2), x] - img[y-(wndw[0]//2), x])
                 else:
                     for i in range(wndw[0]):
-                        sum += img[y-(wndw[0]//2)+i, x, ch]
+                        sum += (img[y-(wndw[0]//2)+i, x, ch] if colored
+                        else img[y-(wndw[0]//2)+i, x])
                     all_win = False
-                inter_img[y, x, ch] = sum
+                inter_img[y - wndw[0]//2, x - wndw[1]//2, ch] = sum
                 prev_sum = sum
     out_img = np.ndarray(out_shape)
     #vertical
     for ch in range(inter_img.shape[2]):
-        for x in range(wndw[1]//2, inter_img.shape[1] - wndw[1]//2 + 1):
+        for x in range(wndw[1]//2, inter_img.shape[1] - wndw[1]//2):
             all_win = True
-            for y in range(wndw[0]//2, inter_img.shape[0] - wndw[0]//2 + 1):
+            for y in range(wndw[0]//2, inter_img.shape[0] - wndw[0]//2):
                 sum = 0
                 if not all_win:
-                    sum = prev_sum + inter_img[y, x + (wndw[1]//2)+1, ch] -
-                    inter_img[y, x-(wndw[1]//2), ch]
+                    sum = prev_sum + (inter_img[y, x + (wndw[1]//2), ch]
+                    - inter_img[y, x-(wndw[1]//2), ch] if colored else
+                    inter_img[y, x + (wndw[1]//2)]-inter_img[y, x-(wndw[1]//2)])
                 else:
                     for i in range(wndw[1]):
-                        sum += inter_img[y, x-(wndw[1]//2)+i, ch]
+                        sum += (inter_img[y, x-(wndw[1]//2)+i, ch] if colored
+                        else inter_img[y, x-(wndw[1]//2)+i])
                     all_win = False
-                out_img[y, x, ch] = sum
+                out_img[y - wndw[0]//2, x - wndw[1]//2, ch] = sum
                 prev_sum = sum
     out_img /= wndw[0] * wndw[1]
     return out_img
@@ -162,13 +174,20 @@ def integrated_image(img):
     :param img: Imagem de entrada
     :returns: A imagem integrada
     """
-    out_img = np.ndarray(img.shape)
+    colored = True
+    if(len(img.shape) == 3):
+        out_shape = (img.shape[0], img.shape[1], img.shape[2])
+    else:
+        colored = False
+        out_shape = (img.shape[0], img.shape[1], 1)
+    out_img = np.ndarray(out_shape)
     #esquerda
-    for ch in range(img.shape[2]):
+    for ch in range(img.shape[2] if colored  else 1):
         for y in range(img.shape[0]):
-            out_img[y, 0, ch] = img[y, 0, ch]
+            out_img[y, 0, ch] = (img[y, 0, ch] if colored else img[y, 0])
             for x in range(1, img.shape[1]):
-                out_img[y, x, ch] = img[y, x, ch] + out_img[y, x-1, ch]
+                out_img[y, x, ch] = (img[y, x, ch] if colored else img[y, x])
+                + out_img[y, x-1, ch]
     #acima
     for ch in range(out_img.shape[2]):
         for y in range(1, out_img.shape[0]):
@@ -227,5 +246,6 @@ def mean_filter_integrated(img, wndw):
                         l_t = inter_img[y-(wndw[0]//2)-1, 0, ch]
                     else:
                         l_t = inter_img[y-(wndw[0]//2)-1, x-(wndw[1]//2)-1, ch]
-                out_inter_img[y, x, ch] = r_b + l_t - l_b - r_t
+                out_img[y, x, ch] = r_b + l_t - l_b - r_t
+    out_img /= wndw[0] * wndw[1]
     return out_img
