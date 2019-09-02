@@ -126,12 +126,12 @@ def mean_filter_separable(img, wndw):
             all_win = True
             for x in range(wndw[1]//2, img.shape[1] - wndw[1]//2):
                 sum = 0
+
                 if not all_win:
-                    sum = prev_sum + img[y+(wndw[0]//2), x, ch]
-                    - img[y-(wndw[0]//2), x, ch]
+                    sum = prev_sum + img[y, x+(wndw[1]//2), ch] - img[y, x-(wndw[1]//2)-1, ch]
                 else:
-                    for i in range(wndw[0]):
-                        sum += img[y-(wndw[0]//2)+i, x, ch]
+                    for i in range(wndw[1]):
+                        sum += img[y, x-(wndw[1]//2)+i, ch]
                     all_win = False
                 inter_img[y - wndw[0]//2, x - wndw[1]//2, ch] = sum
                 prev_sum = sum
@@ -143,15 +143,15 @@ def mean_filter_separable(img, wndw):
             for y in range(wndw[0]//2, inter_img.shape[0] - wndw[0]//2):
                 sum = 0
                 if not all_win:
-                    sum = prev_sum + inter_img[y, x + (wndw[1]//2), ch]
-                    - inter_img[y, x-(wndw[1]//2), ch]
+                    sum = prev_sum + inter_img[y + (wndw[0]//2), x, ch] - inter_img[y-(wndw[0]//2)-1, x, ch]
                 else:
-                    for i in range(wndw[1]):
-                        sum += inter_img[y, x-(wndw[1]//2)+i, ch]
+                    for i in range(wndw[0]):
+                        sum += inter_img[y-(wndw[0]//2)+i, x, ch]
                     all_win = False
                 out_img[y - wndw[0]//2, x - wndw[1]//2, ch] = sum
                 prev_sum = sum
-    out_img /= wndw[0] * wndw[1]
+
+    out_img /= wndw[0]*wndw[1]
     return out_img
 
 def integrated_image(img):

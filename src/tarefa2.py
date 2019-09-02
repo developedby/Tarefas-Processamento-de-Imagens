@@ -26,7 +26,7 @@ if __name__ == '__main__':
     # Normaliza
     img = img.astype(float) / 255
     window = [WINDOW_HEIGHT, WINDOW_WIDTH]
-
+    
     # Ingênuo
     initial_time = time.time()
     out_img = mean_filter_bad(img, window)
