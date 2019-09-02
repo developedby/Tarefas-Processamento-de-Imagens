@@ -13,9 +13,9 @@ from pdi import *
 
 # Parâmetros
 IMAGE_FOLDER = "../img"
-INPUT_IMAGE = "flowers.bmp"
-WINDOW_HEIGHT = 3
-WINDOW_WIDTH = 3
+INPUT_IMAGE = "arroz.bmp"
+WINDOW_HEIGHT = 13
+WINDOW_WIDTH = 13
 
 if __name__ == '__main__':
     # Abre a imagem
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     # Normaliza
     img = img.astype(float) / 255
     window = [WINDOW_HEIGHT, WINDOW_WIDTH]
-    
+
     # Ingênuo
     initial_time = time.time()
     out_img = mean_filter_bad(img, window)

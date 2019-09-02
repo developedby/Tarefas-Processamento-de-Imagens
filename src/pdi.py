@@ -188,38 +188,38 @@ def mean_filter_integrated(img, wndw):
     for ch in range(inter_img.shape[2]):
         for y in range(inter_img.shape[0]):
             for x in range(inter_img.shape[1]):
-                if (y+(wndw[0]//2)+1) >= inter_img.shape[0]:
-                    if (x+(wndw[1]//2)+1) >= inter_img.shape[1]:
+                if (y+(wndw[0]//2)) >= inter_img.shape[0]:
+                    if (x+(wndw[1]//2)) >= inter_img.shape[1]:
                         r_b = inter_img[inter_img.shape[0]-1, inter_img.shape[1]-1, ch]
                     else:
-                        r_b = inter_img[inter_img.shape[0]-1, x+(wndw[1]//2)+1, ch]
+                        r_b = inter_img[inter_img.shape[0]-1, x+(wndw[1]//2), ch]
                     if (x-(wndw[1]//2)-1) < 0:
                         l_b = inter_img[inter_img.shape[0]-1, 0, ch]
                     else:
                         l_b = inter_img[inter_img.shape[0]-1, x-(wndw[1]//2)-1, ch]
                 else:
-                    if (x+(wndw[1]//2)+1) >= inter_img.shape[1]:
-                        r_b = inter_img[y+(wndw[0]//2)+1, inter_img.shape[1]-1, ch]
+                    if (x+(wndw[1]//2)) >= inter_img.shape[1]:
+                        r_b = inter_img[y+(wndw[0]//2), inter_img.shape[1]-1, ch]
                     else:
-                        r_b = inter_img[y+(wndw[0]//2)+1, x+(wndw[1]//2)+1, ch]
+                        r_b = inter_img[y+(wndw[0]//2), x+(wndw[1]//2), ch]
                     if (x-(wndw[1]//2)-1) < 0:
-                        l_b = inter_img[y+(wndw[0]//2)+1, 0, ch]
+                        l_b = inter_img[y+(wndw[0]//2), 0, ch]
                     else:
-                        l_b = inter_img[y+(wndw[0]//2)+1, x-(wndw[1]//2)-1, ch]
+                        l_b = inter_img[y+(wndw[0]//2), x-(wndw[1]//2)-1, ch]
                 if (y-(wndw[0]//2)-1) < 0:
-                    if (x+(wndw[1]//2)+1) >= inter_img.shape[1]:
+                    if (x+(wndw[1]//2)) >= inter_img.shape[1]:
                         r_t = inter_img[0, inter_img.shape[1]-1, ch]
                     else:
-                        r_t = inter_img[0, x+(wndw[1]//2)+1, ch]
+                        r_t = inter_img[0, x+(wndw[1]//2), ch]
                     if (x-(wndw[1]//2)-1) < 0:
                         l_t = inter_img[0, 0, ch]
                     else:
                         l_t = inter_img[0, x-(wndw[1]//2)-1, ch]
                 else:
-                    if (x+(wndw[1]//2)+1) >= inter_img.shape[1]:
+                    if (x+(wndw[1]//2)) >= inter_img.shape[1]:
                         r_t = inter_img[y-(wndw[0]//2)-1, inter_img.shape[1]-1, ch]
                     else:
-                        r_t = inter_img[y-(wndw[0]//2)-1, x+(wndw[1]//2)+1, ch]
+                        r_t = inter_img[y-(wndw[0]//2)-1, x+(wndw[1]//2), ch]
                     if (x-(wndw[1]//2)-1) < 0:
                         l_t = inter_img[y-(wndw[0]//2)-1, 0, ch]
                     else:
