@@ -13,7 +13,7 @@ from pdi import *
 
 # Parâmetros
 IMAGE_FOLDER = "../img"
-INPUT_IMAGE = "arroz.bmp"
+INPUT_IMAGE = "flowers.bmp"
 WINDOW_HEIGHT = 13
 WINDOW_WIDTH = 13
 
@@ -25,14 +25,14 @@ if __name__ == '__main__':
         exit()
     # Normaliza
     img = img.astype(float) / 255
-    window = [WINDOW_HEIGHT, WINDOW_WIDTH]
+    window = (WINDOW_HEIGHT, WINDOW_WIDTH)
 
     # Ingênuo
     initial_time = time.time()
     out_img = mean_filter_bad(img, window)
     total_time = time.time() - initial_time
     print(f"Tempo ingenuo: {total_time}")
-    out_img = (out_img*255).astype(np.uint8)
+    out_img = float_to_uint8(out_img)
     cv2.imwrite(f"{IMAGE_FOLDER}/01 - ingenuo.bmp", out_img)
 
     # Separavel
@@ -40,13 +40,21 @@ if __name__ == '__main__':
     out_img = mean_filter_separable(img, window)
     total_time = time.time() - initial_time
     print(f"Tempo separavel: {total_time}")
-    out_img = (out_img*255).astype(np.uint8)
+    out_img = float_to_uint8(out_img)
     cv2.imwrite(f"{IMAGE_FOLDER}/02 - separavel.bmp", out_img)
 
     # Integral
     initial_time = time.time()
-    out_img = mean_filter_integrated(img, window)
+    out_img = mean_filter_integral(img, window)
     total_time = time.time() - initial_time
     print(f"Tempo integral: {total_time}")
-    out_img = (out_img*255).astype(np.uint8)
+    out_img = float_to_uint8(out_img)
     cv2.imwrite(f"{IMAGE_FOLDER}/03 - integral.bmp", out_img)
+
+    # OpenCV
+    initial_time = time.time()
+    out_img = cv2.blur(img, window)
+    total_time = time.time() - initial_time
+    print(f"Tempo OpenCV: {total_time}")
+    out_img = float_to_uint8(out_img)
+    cv2.imwrite(f"{IMAGE_FOLDER}/04 - opencv.bmp", out_img)
