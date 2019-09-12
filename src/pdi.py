@@ -3,9 +3,7 @@ import cv2
 import numpy as np
 
 def float_to_uint8(img):
-    """Converte uma image float com valores em [0, 1] para uma imagem uint8"""
     return (img*255).astype(np.uint8)
-
 def binarize(img, threshold):
     """Binariza a imagem usando um threshold global"""
     return (img > threshold).astype(float)
@@ -96,13 +94,6 @@ def draw_bounding_rectangle(img, component, thickness=2):
     cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), thickness)
     return img
 
-def _max_window_size(img_shape, pixel):
-    x_plus = img_shape[1]-1 - pixel[1]
-    x_minus = pixel[1]
-    y_plus = img_shape[0]-1 - pixel[0]
-    y_minus = pixel[0]
-    return min(y_plus, y_minus), min(x_plus, x_minus)
-
 def mean_filter_bad(img, wndw):
     """Aplica um filtro da média usando algoritmo ingênuo
     :param img: Imagem de entrada
@@ -130,10 +121,10 @@ def mean_filter_separable(img, wndw):
     :returns: A imagem borrada
     """
     out_shape = (img.shape[0] -  wndw[0] + 1, img.shape[1] - wndw[1] + 1, img.shape[2])
-    inter_img = np.ndarray(out_shape)
+    inter_img = np.ndarray((img.shape[0], img.shape[1] - wndw[1] + 1, img.shape[2]))
     #horizontal
     for ch in range(img.shape[2]):
-        for y in range(wndw[0]//2, img.shape[0] - wndw[0]//2):
+        for y in range(img.shape[0]):
             all_win = True
             for x in range(wndw[1]//2, img.shape[1] - wndw[1]//2):
                 sum = 0
@@ -144,12 +135,12 @@ def mean_filter_separable(img, wndw):
                     for i in range(wndw[1]):
                         sum += img[y, x-(wndw[1]//2)+i, ch]
                     all_win = False
-                inter_img[y - wndw[0]//2, x - wndw[1]//2, ch] = sum
+                inter_img[y, x - wndw[1]//2, ch] = sum
                 prev_sum = sum
     out_img = np.ndarray(out_shape)
     #vertical
     for ch in range(inter_img.shape[2]):
-        for x in range(wndw[1]//2, inter_img.shape[1] - wndw[1]//2):
+        for x in range(inter_img.shape[1]):
             all_win = True
             for y in range(wndw[0]//2, inter_img.shape[0] - wndw[0]//2):
                 sum = 0
@@ -159,7 +150,7 @@ def mean_filter_separable(img, wndw):
                     for i in range(wndw[0]):
                         sum += inter_img[y-(wndw[0]//2)+i, x, ch]
                     all_win = False
-                out_img[y - wndw[0]//2, x - wndw[1]//2, ch] = sum
+                out_img[y - wndw[0]//2, x, ch] = sum
                 prev_sum = sum
 
     out_img /= wndw[0]*wndw[1]
@@ -190,7 +181,6 @@ def mean_filter_integral(img, wndw):
     :param wndw: Tamanho da janela no formato (height, width)
     :returns: A imagem borrada
     """
-    wndw = (wndw[0]//2, wndw[1]//2)
     inter_img = integral_image(img)
     out_img = np.ndarray(inter_img.shape)
     r_b = 0
@@ -200,18 +190,27 @@ def mean_filter_integral(img, wndw):
     for ch in range(inter_img.shape[2]):
         for y in range(inter_img.shape[0]):
             for x in range(inter_img.shape[1]):
-                # Calcula qual a janela para esse pixel
-                max_wndw = _max_window_size(img.shape, (y, x))
-                wndw_px = (min(max_wndw[0], wndw[0]), min(max_wndw[1], wndw[1]))
-                # Pega os valores da imagem integral
-                r_b = inter_img[y+wndw_px[0], x+wndw_px[1], ch]
-                l_b = inter_img[y+wndw_px[0], x-wndw_px[1]-1, ch] if (x-wndw_px[1]-1) >= 0 else 0
-                r_t = inter_img[y-wndw_px[0]-1, x+wndw_px[1], ch] if (y-wndw_px[0]-1) >= 0 else 0
-                if (x-wndw_px[1]-1) >= 0 and (y-wndw_px[0]-1) >= 0:
-                    l_t = inter_img[y-wndw_px[0]-1, x-wndw_px[1]-1, ch]
+                if (y+(wndw[0]//2)) >= inter_img.shape[0]:
+                    y2 = inter_img.shape[0]-1
                 else:
-                    l_t = 0
-                # Calcula o resultado
+                    y2 = y+(wndw[0]//2)
+                if (x+(wndw[1]//2)) >= inter_img.shape[1]:
+                    x2 = inter_img.shape[1] - 1
+                else:
+                    x2 = x+(wndw[1]//2)
+                if (x-(wndw[1]//2)-1) < 0:
+                    x1 = 1
+                else:
+                    x1 = x-(wndw[1]//2)
+                if (y-(wndw[0]//2)-1) < 0:
+                    y1 = 1
+                else:
+                    y1 = y-(wndw[0]//2)
+
+                l_b = inter_img[y2, x1-1, ch]
+                r_b = inter_img[y2, x2, ch]
+                l_t = inter_img[y1-1, x1-1, ch]
+                r_t = inter_img[y1-1, x2, ch]
                 out_img[y, x, ch] = r_b + l_t - l_b - r_t
-                out_img[y, x, ch] /= (2*wndw_px[0] + 1) * (2*wndw_px[1] + 1)
+                out_img[y, x, ch] /= (y2 - y1 + 1) * (x2 - x1 + 1)
     return out_img
