@@ -214,3 +214,30 @@ def mean_filter_integral(img, wndw):
                 out_img[y, x, ch] = r_b + l_t - l_b - r_t
                 out_img[y, x, ch] /= (y2 - y1 + 1) * (x2 - x1 + 1)
     return out_img
+
+def bright_pass_filter(img):
+    """Aplica um filtro deixando passar apenas as fontes de luz
+    :param img: Imagem de entrada
+    :returns: A imagem com apenas as fontes de luz
+    """
+    return img
+
+def mean_filters(img, amount):
+    """Aplica um filtro da média amount vezes
+    :param img: Imagem de entrada
+    :param amount: Quantidade que o filtro da média que será aplicado na imagem
+    :returns: img contendo a soma de todos os filtros aplicados
+    """
+    return [img, img]
+
+def bloom(img, mean_filter_amount, alpha, betta):
+    """Aplica o efeito bloom
+    :param img: Imagem de entrada
+    :param mean_filter_amount: Quantidade imagens borradas que será somada ao
+    efeito final
+    :param alpha: Valor que será multiplicado a imagem resultante de mean_filters
+    :param betta: Valor que será multiplicado a imagem resultante da soma das
+    imagens borradas
+    :returns: A imagem com o efeito bloom
+    """
+    return img
