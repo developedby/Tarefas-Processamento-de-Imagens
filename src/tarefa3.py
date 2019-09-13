@@ -13,6 +13,7 @@ from pdi import *
 # Parâmetros
 IMAGE_FOLDER = "../img"
 INPUT_IMAGE = "GT2.BMP"
+THRESHOLD = 0.5
 MEAN_FILTER_AMOUNT = 5
 ALPHA = 0.3
 BETTA = 0.7
@@ -23,13 +24,11 @@ if __name__ == '__main__':
     if img is None:
         print("Erro ao abrir a imagem")
         exit()
-    # Normaliza
-    img = img.astype(float) / 255
 
     # Ingênuo
     initial_time = time.time()
-    out_img = bloom(img, MEAN_FILTER_AMOUNT, ALPHA, BETTA)
+    out_img = bloom(img, THRESHOLD, MEAN_FILTER_AMOUNT, ALPHA, BETTA)
     total_time = time.time() - initial_time
     print(f"Tempo: {total_time}")
-    out_img = float_to_uint8(out_img)
+    #out_img = float_to_uint8(out_img)
     cv2.imwrite(f"{IMAGE_FOLDER}/01 - bloor.bmp", out_img)
