@@ -221,7 +221,6 @@ def bright_pass_filter(img, threshold):
     :returns: A imagem com apenas as fontes de luz
     """
     hsl_img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
-    # Normaliza
     hsl_img = hsl_img.astype(float) / 255
     h, s, l = cv2.split(hsl_img)
     for y in range(s.shape[0]):
@@ -230,7 +229,6 @@ def bright_pass_filter(img, threshold):
                 s[y, x] = 0
     out_img = cv2.merge((h, s, l))
     out_img = float_to_uint8(out_img)
-
     out_img = cv2.cvtColor(out_img, cv2.COLOR_HLS2BGR)
     return out_img
 
@@ -240,7 +238,20 @@ def mean_filters(img, amount):
     :param amount: Quantidade que o filtro da média que será aplicado na imagem
     :returns: img contendo a soma de todos os filtros aplicados
     """
-    return [img, img]
+    imgs = []
+    wnd = 13
+    for i in range(amount):
+        imgs.append(cv2.GaussianBlur(img, (wnd, wnd), 0))
+        wnd += 10
+    out_img = np.ndarray(img.shape)
+    for i in range(amount):
+        out_img += imgs[i]
+    # for ch in range(out_img.shape[2]):
+    #     for y in range(out_img.shape[0]):
+    #         for x in range(out_img.shape[1]):
+    #             if out_img[y, x, ch] > 1:
+    #                 out_img[y, x, ch] = 1
+    return out_img
 
 def bloom(img, threshold, mean_filter_amount, alpha, betta):
     """Aplica o efeito bloom
@@ -252,5 +263,7 @@ def bloom(img, threshold, mean_filter_amount, alpha, betta):
     imagens borradas
     :returns: A imagem com o efeito bloom
     """
-    out_img = bright_pass_filter(img, threshold)
+    bright_img = bright_pass_filter(img, threshold)
+    inter_img = mean_filters(bright_img, mean_filter_amount)
+    out_img = img*alpha + inter_img*betta
     return out_img

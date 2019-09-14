@@ -15,8 +15,8 @@ IMAGE_FOLDER = "../img"
 INPUT_IMAGE = "GT2.BMP"
 THRESHOLD = 0.5
 MEAN_FILTER_AMOUNT = 5
-ALPHA = 0.3
-BETTA = 0.7
+ALPHA = 0.8
+BETTA = 0.2
 
 if __name__ == '__main__':
     # Abre a imagem
