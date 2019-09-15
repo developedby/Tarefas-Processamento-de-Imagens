@@ -1,9 +1,14 @@
 """Biblioteca de funções de processamento de imagens"""
+import math
 import cv2
 import numpy as np
 
 def float_to_uint8(img):
     return (img*255).astype(np.uint8)
+
+def uint8_to_float(img):
+    return img.astype(np.float32) / 255
+
 def binarize(img, threshold):
     """Binariza a imagem usando um threshold global"""
     return (img > threshold).astype(float)
@@ -215,55 +220,66 @@ def mean_filter_integral(img, wndw):
                 out_img[y, x, ch] /= (y2 - y1 + 1) * (x2 - x1 + 1)
     return out_img
 
-def bright_pass_filter(img, threshold):
+def high_value_pass_filter(img, cut_value):
     """Aplica um filtro deixando passar apenas as fontes de luz
-    :param img: Imagem de entrada
+    :param img: Imagem de entrada, com apenas uma camada
+    :param cut_value: A intensidade de corte
     :returns: A imagem com apenas as fontes de luz
     """
-    hsl_img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
-    hsl_img = hsl_img.astype(float) / 255
-    h, s, l = cv2.split(hsl_img)
-    for y in range(s.shape[0]):
-        for x in range(s.shape[1]):
-            if(s[y, x] < threshold):
-                s[y, x] = 0
-    out_img = cv2.merge((h, s, l))
-    out_img = float_to_uint8(out_img)
-    out_img = cv2.cvtColor(out_img, cv2.COLOR_HLS2BGR)
-    return out_img
+    _, mask = cv2.threshold(img, cut_value, 1, cv2.THRESH_BINARY)
+    mask = mask.astype(np.uint8)
+    img = cv2.copyTo(img, mask)
+    return img
 
-def mean_filters(img, amount):
-    """Aplica um filtro da média amount vezes
+def approx_gaussian_blur(img, sigma, num_iter):
+    """Aplica um filtro aproximadamente gaussiano usando varios box blur
     :param img: Imagem de entrada
-    :param amount: Quantidade que o filtro da média que será aplicado na imagem
-    :returns: img contendo a soma de todos os filtros aplicados
+    :param sigma: Desvio padrão da distribuição gaussiana do filtro
+    :param num_iter: Quantas vezes aplicar o box blur
+    :returns: Imagem filtrada
     """
-    imgs = []
-    wnd = 13
-    for i in range(amount):
-        imgs.append(cv2.GaussianBlur(img, (wnd, wnd), 0))
-        wnd += 10
-    out_img = np.ndarray(img.shape)
-    for i in range(amount):
-        out_img += imgs[i]
-    # for ch in range(out_img.shape[2]):
-    #     for y in range(out_img.shape[0]):
-    #         for x in range(out_img.shape[1]):
-    #             if out_img[y, x, ch] > 1:
-    #                 out_img[y, x, ch] = 1
-    return out_img
+    # Calcula o tamanho da janela que cria um desvio padrao próximo de sigma
+    size = int(np.floor(np.sqrt((sigma*sigma*12 + 1)/num_iter)))
+    if not size % 2:
+        size += 1
+    if size <= 1:
+        print(f"Não conseguiu aproximar gaussiana com sigma={sigma} por {num_iter} box blurs")
+        return img
+    for _ in range(num_iter):
+        img = cv2.blur(img, (size, size))
+    return img
 
-def bloom(img, threshold, mean_filter_amount, alpha, betta):
-    """Aplica o efeito bloom
+def bloom(img, threshold, num_blurs, init_sigma, weight, blur_func):
+    """Aplica o efeito bloom.
+    O efeito bloom é simulado separando as partes brilhantes da imagem,
+        borrando elas com sigma dobrando a cada vez
+        e somando todas as imagens borradas sobre a original.
+
     :param img: Imagem de entrada
-    :param mean_filter_amount: Quantidade imagens borradas que será somada ao
-    efeito final
-    :param alpha: Valor que será multiplicado a imagem resultante de mean_filters
-    :param betta: Valor que será multiplicado a imagem resultante da soma das
+    :param num_blurs: Quantas camadas de borrado aplicar nas partes brilhantes
+    :param weight: Peso com qual a imagem do bloom é somada à original
     imagens borradas
+    :param blur_func: A função de borrar imagem com argumentos (img, sigma)
     :returns: A imagem com o efeito bloom
     """
-    bright_img = bright_pass_filter(img, threshold)
-    inter_img = mean_filters(bright_img, mean_filter_amount)
-    out_img = img*alpha + inter_img*betta
+    img = uint8_to_float(img)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
+    bright = high_value_pass_filter(img[:, :, 1], threshold)
+
+    bloom = np.zeros(bright.shape, dtype=np.float32)
+    sigma = init_sigma
+    for _ in range(num_blurs):
+        bloom += blur_func(bright, sigma)
+        sigma *= 2
+
+    temp = float_to_uint8(np.clip(bright, 0, 1))
+    cv2.imwrite("../img/bright.bmp", temp)
+    temp = float_to_uint8(np.clip(bloom, 0, 1))
+    cv2.imwrite("../img/bloom.bmp", temp)
+
+    out_img = img.copy()
+    out_img[:, :, 1] += weight*bloom
+    out_img[:, :, 1] = np.clip(out_img[:, :, 1], 0, 1)
+    out_img = cv2.cvtColor(out_img, cv2.COLOR_HLS2BGR)
+    out_img = float_to_uint8(out_img)
     return out_img

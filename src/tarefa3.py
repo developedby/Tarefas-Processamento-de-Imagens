@@ -8,15 +8,16 @@ Engenharia de Computação UTFPR-CT
 import time
 import cv2
 import numpy as np
-from pdi import *
+from pdi import bloom, approx_gaussian_blur
 
 # Parâmetros
 IMAGE_FOLDER = "../img"
 INPUT_IMAGE = "GT2.BMP"
-THRESHOLD = 0.5
-MEAN_FILTER_AMOUNT = 5
-ALPHA = 0.8
-BETTA = 0.2
+THRESHOLD = 0.85
+NUM_ITER_MEAN = 3
+BLOOM_WEIGHT = 0.2
+NUM_BLURS = 5
+INIT_SIGMA = 1.2
 
 if __name__ == '__main__':
     # Abre a imagem
@@ -25,10 +26,18 @@ if __name__ == '__main__':
         print("Erro ao abrir a imagem")
         exit()
 
-    # Ingênuo
+    # Gaussiana
+    blur_func = lambda img, sigma: cv2.GaussianBlur(img, (0, 0), sigma)
     initial_time = time.time()
-    out_img = bloom(img, THRESHOLD, MEAN_FILTER_AMOUNT, ALPHA, BETTA)
+    out_img = bloom(img, THRESHOLD, NUM_BLURS, INIT_SIGMA, BLOOM_WEIGHT, blur_func)
     total_time = time.time() - initial_time
-    print(f"Tempo: {total_time}")
-    #out_img = float_to_uint8(out_img)
-    cv2.imwrite(f"{IMAGE_FOLDER}/01 - bloor.bmp", out_img)
+    print(f"Tempo Gaussiana: {total_time}")
+    cv2.imwrite(f"{IMAGE_FOLDER}/01 - bloom_gaussiana.bmp", out_img)
+
+    # Filtro da média
+    blur_func = lambda img, sigma: approx_gaussian_blur(img, sigma, NUM_ITER_MEAN)
+    initial_time = time.time()
+    out_img = bloom(img, THRESHOLD, NUM_BLURS, INIT_SIGMA, BLOOM_WEIGHT, blur_func)
+    total_time = time.time() - initial_time
+    print(f"Tempo Filtro da Média: {total_time}")
+    cv2.imwrite(f"{IMAGE_FOLDER}/02 - bloom_media.bmp", out_img)
