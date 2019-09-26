@@ -11,13 +11,13 @@ import numpy as np
 from pdi import bloom, approx_gaussian_blur
 
 # Parâmetros
-IMAGE_FOLDER = "../img"
-INPUT_IMAGE = "GT2.BMP"
-THRESHOLD = 0.85
+IMAGE_FOLDER = "../img/tarefa3"
+INPUT_IMAGE = "Wind Waker GC.bmp"
+THRESHOLD = 0.5
 NUM_ITER_MEAN = 3
-BLOOM_WEIGHT = 0.2
+BLOOM_WEIGHT = 0.03
 NUM_BLURS = 5
-INIT_SIGMA = 1.2
+INIT_SIGMA = 3
 
 if __name__ == '__main__':
     # Abre a imagem

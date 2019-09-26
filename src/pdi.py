@@ -2,6 +2,7 @@
 import math
 import cv2
 import numpy as np
+from filters import unsharp
 
 def float_to_uint8(img):
     return (img*255).astype(np.uint8)
@@ -273,9 +274,9 @@ def bloom(img, threshold, num_blurs, init_sigma, weight, blur_func):
         sigma *= 2
 
     temp = float_to_uint8(np.clip(bright, 0, 1))
-    cv2.imwrite("../img/bright.bmp", temp)
+    cv2.imwrite("../img/tarefa3/bright.bmp", temp)
     temp = float_to_uint8(np.clip(bloom, 0, 1))
-    cv2.imwrite("../img/bloom.bmp", temp)
+    cv2.imwrite("../img/tarefa3/bloom.bmp", temp)
 
     out_img = img.copy()
     out_img[:, :, 1] += weight*bloom
