@@ -11,13 +11,13 @@ import numpy as np
 from pdi import unsharp, labelize, uint8_to_float
 
 # Parâmetros
-IMAGE_FOLDER = "../img"
-INPUT_IMAGE = "60.bmp"
+IMAGE_FOLDER = "../img/tarefa4"
+INPUT_IMAGE = "150.bmp"#"60.bmp"
 THRESHOLD = 0.7
 NUM_ITER_MEAN = 3
 BLOOM_WEIGHT = 0.12
 NUM_BLURS = 5
-INIT_SIGMA = 1.2
+INIT_SIGMA = 5
 
 if __name__ == '__main__':
     # Abre a imagem
@@ -30,12 +30,26 @@ if __name__ == '__main__':
 
     #f_img = uint8_to_float(img)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    sharp = unsharp(gray, 2*((w+h)//100)+1, 0.5)
-    thresh = cv2.adaptiveThreshold(sharp, 1,
-                                   cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                   cv2.THRESH_BINARY, 2*((w+h)//100)+1, -0.1)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+    #blur = cv2.GaussianBlur(gray, (0, 0), INIT_SIGMA)
+    #cv2.imwrite(f"{IMAGE_FOLDER}/blur.bmp", blur)
+    norma = np.zeros(gray.shape)
+    norma = cv2.normalize(gray,  norma, 150, 50, cv2.NORM_MINMAX)
+    cv2.imwrite(f"{IMAGE_FOLDER}/norma.bmp", norma)
+    sharp = unsharp(norma, 2*((w+h)//100)+1, 3)
+    out_img = (sharp*255).astype(np.uint8)
+    cv2.imwrite(f"{IMAGE_FOLDER}/sharp.bmp", sharp)
+    #thresh = cv2.adaptiveThreshold(sharp, 255,
+    #                               cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+    #                               cv2.THRESH_BINARY, 77, -1)
+    _, thresh = cv2.threshold(sharp, 200, 255, cv2.THRESH_BINARY)
+    cv2.imwrite(f"{IMAGE_FOLDER}/thresh.bmp", thresh)
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     open = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-    eroded = cv2.erode(open, kernel, iterations=2)
-    components = labelize(eroded, 2, 2, 4)
+    cv2.imwrite(f"{IMAGE_FOLDER}/open.bmp", open)
+    eroded = cv2.erode(open, kernel, iterations=1)
+    cv2.imwrite(f"{IMAGE_FOLDER}/eroded.bmp", eroded)
+
+    f_img = uint8_to_float(eroded)
+    components = labelize(f_img, 1, 1, 1)
     print(len(components))
