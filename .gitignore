@@ -3,3 +3,4 @@ pacotes/
 .vscode/
 __pycache__/
 *.bmp
+.ipynb_checkpoints/
