@@ -14,7 +14,7 @@ def binarize(img, threshold):
     """Binariza a imagem usando um threshold global"""
     return (img > threshold).astype(float)
 
-def labelize(img, min_width, min_height, min_n_px):
+def labelize(img, min_width=1, min_height=1, min_n_px=1):
     """Rotula os componentes de uma imagem binária
 
     :param img: Imagem binária que vai ser rotulada
