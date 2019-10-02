@@ -1,0 +1,4 @@
+separar verde do que nao eh verde
+nao fazer binario (tem verde e meio verde por exemplo)
+cuidar com bordas (tipo cabelo)
+

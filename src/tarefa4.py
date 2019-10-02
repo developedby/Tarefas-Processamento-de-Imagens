@@ -1,9 +1,9 @@
-"""Tarefa 3 de processamento digital de imagens
-Descrição: Implementa efeito bloom
+"""Tarefa 4 de processamento digital de imagens
+Descrição: Conta arrozes com diferentes imagens
 Autores: Nicolas Abril e Álefe Felipe Gonçalves Dias
 Professor: Bogdan Nassu
 Engenharia de Computação UTFPR-CT
-09/2019
+10/2019
 """
 import time
 import cv2
@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     f_img = uint8_to_float(open_)
     components = labelize(f_img, 1, 1, 1)
-    
+
     areas = np.array(list(map(len, components)))
     median = np.median(areas)
     rel_areas = areas / median
