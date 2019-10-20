@@ -410,4 +410,4 @@ def green_screen(fg, bg, extra_ret=False):
     if extra_ret:
         return merge, green_mask, dists
 
-    return merge
+    return merge, None, None

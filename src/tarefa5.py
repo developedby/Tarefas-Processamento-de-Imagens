@@ -14,7 +14,7 @@ import pdi
 # Parâmetros
 IMAGE_FOLDER = "../img/tarefa5"
 INPUT_IMAGE = "8.bmp"
-BG_IMAGE = 'bg.jpg'
+BG_IMAGE = 'bg.jpeg'
 INVERT_RGB = False
 
 if __name__ == '__main__':
@@ -38,6 +38,7 @@ if __name__ == '__main__':
 
     cv2.imwrite(f"{INPUT_IMAGE} - Result.bmp", merge)
 
-    cv2.imwrite(f"{INPUT_IMAGE} - Mask.bmp", mask)
-
-    cv2.imwrite(f"{INPUT_IMAGE} - Dists.bmp", pdi.float_to_uint8(dists))
+    if mask is not None:
+        cv2.imwrite(f"{INPUT_IMAGE} - Mask.bmp", mask)
+    if dists is not None:
+        cv2.imwrite(f"{INPUT_IMAGE} - Dists.bmp", pdi.float_to_uint8(dists))
