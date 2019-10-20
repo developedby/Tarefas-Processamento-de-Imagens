@@ -132,6 +132,7 @@ def mean_filter_separable(img, wndw):
     for ch in range(img.shape[2]):
         for y in range(img.shape[0]):
             all_win = True
+            prev_sum = None
             for x in range(wndw[1]//2, img.shape[1] - wndw[1]//2):
                 sum = 0
 
@@ -349,7 +350,7 @@ def remove_outliers(img, low_percentile=1, high_percentile=99):
     img = cv2.LUT(img, lut)
     return img.astype(np.uint8), low_value, high_value
 
-def green_screen(fg, bg):
+def green_screen(fg, bg, extra_ret=False):
     fg = cv2.GaussianBlur(fg, (3, 3), 0.5)
 
     hls = cv2.cvtColor(fg, cv2.COLOR_RGB2HLS)
@@ -405,4 +406,8 @@ def green_screen(fg, bg):
 
     # Junta as duas imagens
     merge = merge_with_thresholds(fg, bg, dists, 0.4, 0.65)
+
+    if extra_ret:
+        return merge, green_mask, dists
+
     return merge
