@@ -284,3 +284,125 @@ def bloom(img, threshold, num_blurs, init_sigma, weight, blur_func):
     out_img = cv2.cvtColor(out_img, cv2.COLOR_HLS2BGR)
     out_img = float_to_uint8(out_img)
     return out_img
+
+def get_distance_from_mask_max(img, ch, ch_max_value, circular, mask):
+    hist_mask = cv2.calcHist([img[:, :, ch]], [0], mask, [ch_max_value+1], [0, ch_max_value+1])
+    max_value = np.argmax(hist_mask)
+    img = img.astype(float)
+    if circular:
+        img_ch = img[:, :, ch]
+        img_ch += ch_max_value//2 - max_value
+        img_ch[img_ch > ch_max_value] -= ch_max_value
+        img_ch[img_ch < 0] += ch_max_value
+        max_value = ch_max_value//2
+    dist = img[:, :, ch] - max_value
+    return dist, max_value
+
+def merge_with_thresholds(fg, bg, alpha, low_th, high_th):
+    alpha = stretch_normalize(alpha, low_th, high_th, 0, 1)
+    alpha_rgb = np.empty(fg.shape)
+    alpha_rgb[:, :, 0] = alpha
+    alpha_rgb[:, :, 1] = alpha
+    alpha_rgb[:, :, 2] = alpha
+
+    fg = cv2.multiply(alpha_rgb, fg.astype(float))
+    bg = cv2.multiply(1.0 - alpha_rgb, bg.astype(float))
+    result = cv2.add(fg, bg).astype(np.uint8)
+    return result
+
+def ln_norm(arrays, n):
+    out = np.zeros(arrays[0].shape)
+    for arr in arrays:
+        out += np.power(arr, n)
+    out = np.power(out, 1/n)
+    return out
+
+def stretch_normalize(array, low_th, high_th, new_min, new_max):
+    array = array.copy()
+    array[array < low_th] = low_th
+    array[array > high_th] = high_th
+    array -= low_th
+    array *= (new_max - new_min)/(high_th - low_th)
+    array += new_min
+    return array
+
+def remove_outliers(img, low_percentile=1, high_percentile=99):
+    n_pixels = img.shape[0] * img.shape[1]
+    low_percentile = n_pixels * (low_percentile/100)
+    high_percentile = n_pixels * (high_percentile/100)
+
+    # Encontra os valores dos extremos
+    hist = cv2.calcHist([img], [0], None, [256], [0, 256])
+    sum_ = cv2.integral(hist)[:, 1]
+    for px_value, count in enumerate(sum_):
+        if count >= low_percentile:
+            low_value = px_value
+            break
+    for px_value in range(len(sum_)-1, -1, -1):
+        if sum_[px_value] < high_percentile:
+            high_value = px_value
+            break
+    # Elimina os extremos
+    lut = np.arange(256, dtype=np.uint8)
+    lut[:low_value] = np.uint8(low_value)
+    lut[high_value:] = np.uint8(high_value)
+    img = cv2.LUT(img, lut)
+    return img.astype(np.uint8), low_value, high_value
+
+def green_screen(fg, bg):
+    fg = cv2.GaussianBlur(fg, (3, 3), 0.5)
+
+    hls = cv2.cvtColor(fg, cv2.COLOR_RGB2HLS)
+
+    # Faz uma máscara que vai ter praticamente todo o verde
+    green_mask = cv2.inRange(hls[:, :, 0], 50, 70)
+
+    # Calcula a diferença entre o h,l,s do fundo e o h,l,s dos outros pixels
+    # Essa "distancia" vai ser a função que avalia
+    #   se o pixel faz parte do fundo verde ou nao
+    dist_h, max_h = get_distance_from_mask_max(hls, 0, 180, True, green_mask)
+    dist_l, max_l = get_distance_from_mask_max(hls, 1, 255, False, green_mask)
+    dist_s, max_s = get_distance_from_mask_max(hls, 2, 255, False, green_mask)
+
+    # Como fundo verde costuma ter saturação alta,
+    #   dá mais peso pra quando a saturação é menor que a do fundo
+    dist_s[dist_s < 0] *= 1.8
+    dist_s = np.clip(dist_s, -255, 255)
+
+    dist_h = np.abs(dist_h)
+    dist_l = np.abs(dist_l)
+    dist_s = np.abs(dist_s)
+
+    dist_h, _, _ = remove_outliers(dist_h.astype(np.uint8), .1, 99.9)
+    dist_l, _, _ = remove_outliers(dist_l.astype(np.uint8), .1, 99.9)
+    dist_s, _, _ = remove_outliers(dist_s.astype(np.uint8), .1, 99.9)
+
+    # Joga para o intervalo [0, 1], preservando a intensidade das distancias
+    dist_h = dist_h.astype(float) / max(max_h, 180-max_h)
+    dist_l = dist_l.astype(float) / max(max_l, 255-max_l)
+    dist_s = dist_s.astype(float) / max(max_s, 255-max_s)
+
+    # Da peso maior pra distâncias grandes
+    th_dist_h = 0.2
+    th_dist_l = 0.7
+    th_dist_s = 0.75
+    dist_h[dist_h > th_dist_h] += (dist_h[dist_h > th_dist_h] - th_dist_h) * 2
+    dist_l[dist_l > th_dist_l] += (dist_l[dist_l > th_dist_l] - th_dist_l) * 3
+    dist_s[dist_s > th_dist_s] += (dist_s[dist_s > th_dist_s] - th_dist_s) * 2
+
+    # Usa sigmoide pra novamente dar peso maior pra distâncias grandes,
+    #   mas também corta pro intervalo [0, 1]
+    dist_h = 1 / (1 + np.exp(-3*(dist_h-0.5)))
+    dist_l = 1 / (1 + np.exp(-4*(dist_l-0.35)))
+    dist_s = 1 / (1 + np.exp(-2*(dist_s-0.6)))
+
+    # Junta as distâncias dando pesos diferentes pros canais
+    # O hue é um pouco mais importante,
+    #   porque algo com hue muito diferente com certeza não pe verede
+    dists = ln_norm((1.2*dist_h, 0.7*dist_l, 0.65*dist_s), 1)
+    dists *= 0.6
+    dists = np.clip(dists, 0, 1)
+
+    # Junta as duas imagens
+    merge = merge_with_thresholds(fg, bg, dists, 0.4, 0.65)
+    return merge
