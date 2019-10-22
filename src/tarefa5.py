@@ -13,7 +13,7 @@ import pdi
 
 # Parâmetros
 IMAGE_FOLDER = "../img/tarefa5"
-INPUT_IMAGE = "8.bmp"
+INPUT_IMAGE = "0.BMP"
 BG_IMAGE = 'bg.jpeg'
 INVERT_RGB = False
 
@@ -31,7 +31,9 @@ if __name__ == '__main__':
 
     start_time = time.time()
 
-    merge, mask, dists = pdi.green_screen(img, bg_img, extra_ret=True)
+    merge, mask, dists = pdi.green_screen(img, bg_img, extra_ret=False)
+    if INVERT_RGB:
+        merge = cv2.cvtColor(merge, cv2.COLOR_BGR2RGB)
 
     total_time = time.time() - start_time
     print(f"Tempo total: {total_time}")

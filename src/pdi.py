@@ -385,8 +385,8 @@ def green_screen(fg, bg, extra_ret=False):
 
     # Da peso maior pra distâncias grandes
     th_dist_h = 0.2
-    th_dist_l = 0.7
-    th_dist_s = 0.75
+    th_dist_l = 0.6
+    th_dist_s = 0.6
     dist_h[dist_h > th_dist_h] += (dist_h[dist_h > th_dist_h] - th_dist_h) * 2
     dist_l[dist_l > th_dist_l] += (dist_l[dist_l > th_dist_l] - th_dist_l) * 3
     dist_s[dist_s > th_dist_s] += (dist_s[dist_s > th_dist_s] - th_dist_s) * 2
@@ -399,13 +399,13 @@ def green_screen(fg, bg, extra_ret=False):
 
     # Junta as distâncias dando pesos diferentes pros canais
     # O hue é um pouco mais importante,
-    #   porque algo com hue muito diferente com certeza não pe verede
-    dists = ln_norm((1.2*dist_h, 0.7*dist_l, 0.65*dist_s), 1)
-    dists *= 0.6
+    #   porque algo com hue muito diferente com certeza não e verde
+    dists = ln_norm((1.2*dist_h, 0.75*dist_l, 0.9*dist_s), 1)
+    dists *= 0.5
     dists = np.clip(dists, 0, 1)
 
     # Junta as duas imagens
-    merge = merge_with_thresholds(fg, bg, dists, 0.4, 0.65)
+    merge = merge_with_thresholds(fg, bg, dists, 0.32, 0.61)
 
     if extra_ret:
         return merge, green_mask, dists
