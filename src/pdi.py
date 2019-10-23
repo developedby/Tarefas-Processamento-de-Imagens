@@ -2,7 +2,6 @@
 import math
 import cv2
 import numpy as np
-from filters import unsharp
 
 def float_to_uint8(img):
     return (img*255).astype(np.uint8)
@@ -405,7 +404,7 @@ def green_screen(fg, bg, extra_ret=False):
     dists = np.clip(dists, 0, 1)
 
     # Junta as duas imagens
-    merge = merge_with_thresholds(fg, bg, dists, 0.32, 0.61)
+    merge = merge_with_thresholds(fg, bg, dists, 0.35, 0.7)
 
     if extra_ret:
         return merge, green_mask, dists
